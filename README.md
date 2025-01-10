@@ -4,8 +4,8 @@
 This repository contains my submission for the Colibri Digital Wind Turbines Data Engineering Exercise. It demonstrates the design and implementation of an end-to-end pipeline using PySpark and includes machine learning models to showcase the usability of the Data Warehouse (DWH) I have designed.
 
 ## Contents
-- **`Wind Turbines.ipynb`**: A Jupyter Notebook that illustrates the pipeline in detail, with outputs and comments at every stage to explain the process and objectives.
-- **`Wind Turbines.py`**: A Python script implementing the same pipeline logic in PySpark for deployment purposes.
+- **`wind_turbine_pipeline.ipynb`**: A Jupyter Notebook that illustrates the pipeline in detail, with outputs and comments at every stage to explain the process and objectives.
+- **`wind_turbine_pipeline.py`**: A Python script implementing the same pipeline logic in PySpark for deployment purposes.
 - **`Design and Assumptions.docx`**: A detailed document explaining the design choices, assumptions, and methodology used in this project.
 
 ## Key Features
@@ -22,10 +22,10 @@ This repository contains my submission for the Colibri Digital Wind Turbines Dat
    - To enhance testability, I recommend separating each processing layer into its own dedicated job. This approach isolates potential errors, making them easier to identify and resolve. For the purposes of this exercise, however, I have consolidated all layers into a single file for simplicity and demonstration.
 
 ## Usage
-- Open the `notebook.ipynb` file to explore the pipeline and view the intermediate outputs at each stage.
-- Refer to `pipeline.py` for a PySpark implementation without intermediate outputs
+- Open the `wind_turbine_pipeline.ipynb` file to explore the pipeline and view the intermediate outputs at each stage.
+- Refer to `wind_turbine_pipeline.py` for a PySpark implementation without intermediate outputs
 - To run this notebook or `.py` file, update the `bronze_df` file path to the directory containing your `.csv` files, you may have to comment out saves to Delta tables if you want to maintain your existing table structure on you Databricks cluster.
-- For a detailed explanation of the project, including design rationale and assumptions, consult the `documentation.docx` file.
+- For a detailed explanation of the project, including design rationale and assumptions, consult the `Design and Assumptions.docx` file.
 
 ## Notes
 - The pipeline overwrites Delta tables in the current setup for simplicity.
