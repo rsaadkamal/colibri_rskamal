@@ -14,7 +14,7 @@ This repository contains my submission for the Colibri Digital Wind Turbines Dat
    - Each stage is documented in the notebook with comments explaining the logic and objectives.
 
 2. **Data Processing**: 
-   - While the current implementation processes entire data files, in a real-world scenario, this would be optimized by ingesting only new data using a `load_date` field.
+   - While the current implementation processes entire data files, in a real-world scenario, this would be optimized by ingesting only new data using a `load_date` field, only new data would be processed and merged into tables across layers to ensure the pipeline is scaleable
    - Workflow orchestration tools (e.g., Azure Data Factory, Apache Airflow, Databricks Workflows) would be employed to manage incremental data ingestion and merge it across layers, improving scalability and efficiency.
 
 3. **Scalability**: 
