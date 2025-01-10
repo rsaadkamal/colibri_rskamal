@@ -30,7 +30,7 @@ This repository contains my submission for the Colibri Digital Wind Turbines Dat
 ## Notes
 - The pipeline overwrites Delta tables in the current setup for simplicity.
 - Incremental data processing and workflow orchestration are recommended for real-world deployment.
-- 
+  
 ### Running the Script
 Execute the script with Python and specify the task to perform:
 ```bash
