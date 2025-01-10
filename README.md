@@ -5,7 +5,7 @@ This repository contains my submission for the Colibri Digital Wind Turbines Dat
 
 ## Contents
 - **`wind_turbine_pipeline.ipynb`**: A Jupyter Notebook that illustrates the pipeline in detail, with outputs and comments at every stage to explain the process and objectives.
-- **`wind_turbine_pipeline.py`**: A Python script implementing the same pipeline logic in PySpark for deployment purposes.
+- **`wind_turbine_pipeline.py`**: A Python script implementing the same pipeline logic in PySpark for deployment purposes, this file is parameterised and uses functions to produce a DAG.
 - **`Design and Assumptions.docx`**: A detailed document explaining the design choices, assumptions, and methodology used in this project.
 
 ## Key Features
