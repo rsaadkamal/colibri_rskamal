@@ -2,9 +2,14 @@ from pyspark.sql import SparkSession, Window
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType
 from pyspark.sql import functions as F
 from pyspark.sql.functions import col, lit, when, to_date, date_format, monotonically_increasing_id, isnan
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.regression import LinearRegression
+from pyspark.ml.classification import LogisticRegression
 
 # Initialize Spark session
 spark = SparkSession.builder.appName("TurbinePipeline").getOrCreate()
+
+# ----------------------- Pipeline Functions -----------------------
 
 def load_bronze_data(input_path):
     """Load raw data into the Bronze layer."""
@@ -159,8 +164,8 @@ def save_gold_layer(fact_table, time_dim, turbine_dim, fact_table_name, time_dim
     time_dim.write.format("delta").mode("overwrite").saveAsTable(time_dim_name)
     turbine_dim.write.format("delta").mode("overwrite").saveAsTable(turbine_dim_name)
 
-# DAG for pipeline
 def run_pipeline():
+    """Run the data pipeline (Bronze, Silver, Gold layers)."""
     bronze_path = "/FileStore/colibri/*.csv"
     bronze_table = "bronze_turbine_data"
     silver_table = "silver_turbine_data"
@@ -181,6 +186,93 @@ def run_pipeline():
     fact_table, time_dim, turbine_dim = process_gold_layer(silver_df)
     save_gold_layer(fact_table, time_dim, turbine_dim, fact_table_name, time_dim_name, turbine_dim_name)
 
-# Execute the pipeline
+# ----------------------- Stats Functions -----------------------
+
+def calculate_summary_stats():
+    """Calculate summary statistics and save results."""
+    fact_table_name = "gold_fact_turbine_metrics"
+    summary_table = "gold_daily_summary"
+
+    fact_table = spark.table(fact_table_name)
+    daily_summary_df = fact_table.groupBy("turbine_id", "date_key").agg(
+        F.min("power_output").alias("min_power_output"),
+        F.max("power_output").alias("max_power_output"),
+        F.avg("power_output").alias("avg_power_output"),
+    )
+    daily_summary_df.write.format("delta").mode("overwrite").saveAsTable(summary_table)
+
+def detect_anomalies():
+    """Detect anomalies in the fact table."""
+    fact_table_name = "gold_fact_turbine_metrics"
+    anomalies_table = "gold_anomalies"
+
+    fact_table = spark.table(fact_table_name)
+    stats_df = fact_table.groupBy("turbine_id", "date_key").agg(
+        F.mean("power_output").alias("mean_power_output"),
+        F.stddev("power_output").alias("stddev_power_output"),
+    )
+    joined_df = fact_table.join(stats_df, on=["turbine_id", "date_key"], how="inner")
+    anomalies_df = joined_df.filter(
+        (col("power_output") > col("mean_power_output") + 2 * col("stddev_power_output")) |
+        (col("power_output") < col("mean_power_output") - 2 * col("stddev_power_output"))
+    ).select(
+        "turbine_id", "date_key", "power_output", "mean_power_output", "stddev_power_output"
+    )
+    anomalies_df.write.format("delta").mode("overwrite").saveAsTable(anomalies_table)
+
+# ----------------------- ML Functions -----------------------
+
+def train_regression_model():
+    """Train a Linear Regression model."""
+    fact_table_name = "gold_fact_turbine_metrics"
+    regression_model_path = "/models/linear_regression"
+    features = ["wind_speed", "wind_direction"]
+    label = "power_output"
+
+    fact_table = spark.table(fact_table_name)
+    assembler = VectorAssembler(inputCols=features, outputCol="features")
+    data = assembler.transform(fact_table).select("features", label)
+    train_data, test_data = data.randomSplit([0.8, 0.2], seed=42)
+
+    lr = LinearRegression(featuresCol="features", labelCol=label)
+    lr_model = lr.fit(train_data)
+    lr_model.write().overwrite().save(regression_model_path)
+    print("Linear Regression model saved at:", regression_model_path)
+
+def train_classification_model():
+    """Train a Logistic Regression model."""
+    fact_table_name = "gold_fact_turbine_metrics"
+    classification_model_path = "/models/logistic_regression"
+    features = ["wind_speed", "wind_direction"]
+    label = "power_output"
+    threshold = 100
+
+    fact_table = spark.table(fact_table_name)
+    labeled_df = fact_table.withColumn(
+        "label", when(col(label) < threshold, 1).otherwise(0)
+    )
+    assembler = VectorAssembler(inputCols=features, outputCol="features")
+    data = assembler.transform(labeled_df).select("features", "label")
+    train_data, test_data = data.randomSplit([0.8, 0.2], seed=42)
+
+    lr = LogisticRegression(featuresCol="features", labelCol="label")
+    lr_model = lr.fit(train_data)
+    lr_model.write().overwrite().save(classification_model_path)
+    print("Logistic Regression model saved at:", classification_model_path)
+
+# ----------------------- Main Functions -----------------------
+
 if __name__ == "__main__":
-    run_pipeline()
+    # Choose which task to run
+    task = input("Enter task (pipeline/stats/ml): ").strip().lower()
+
+    if task == "pipeline":
+        run_pipeline()
+    elif task == "stats":
+        calculate_summary_stats()
+        detect_anomalies()
+    elif task == "ml":
+        train_regression_model()
+        train_classification_model()
+    else:
+        print("Invalid task! Choose 'pipeline', 'stats', or 'ml'.")
