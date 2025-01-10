@@ -23,9 +23,8 @@ This repository contains my submission for the Colibri Digital Wind Turbines Dat
 
 ## Usage
 - Open the `wind_turbine_pipeline.ipynb` file to explore the pipeline and view the intermediate outputs at each stage.
-- Refer to `wind_turbine_pipeline.py` for a PySpark implementation without intermediate outputs
+- Refer to `wind_turbine_pipeline.py` for a PySpark implementation without intermediate outputs and a paramterised solution that is modular.
 - To run this notebook or `.py` file, update the `bronze_df` file path to the directory containing your `.csv` files, you may have to comment out saves to Delta tables if you want to maintain your existing table structure on you Databricks cluster.
-- 
 - For a detailed explanation of the project, including design rationale and assumptions, consult the `Design and Assumptions.docx` file.
 
 ## Notes
